@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Playwright MCP</title>
+    <style>
+      :root {
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        line-height: 1.35;
+      }
+
+      body {
+        margin: 12px;
+        width: 340px;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: 15px;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .badge.connected {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .badge.connecting {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .badge.disconnected {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .summary {
+        margin: 8px 0 12px;
+        font-size: 12px;
+        color: #374151;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 84px 1fr;
+        gap: 6px 8px;
+        font-size: 12px;
+        margin-bottom: 12px;
+      }
+
+      .label {
+        color: #6b7280;
+      }
+
+      code {
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 11px;
+      }
+
+      .buttons {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 10px;
+      }
+
+      button {
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        background: #fff;
+        padding: 6px 10px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #f8fafc;
+      }
+
+      #status {
+        border: 1px solid #e5e7eb;
+        background: #f8fafc;
+        border-radius: 6px;
+        padding: 8px;
+        font-size: 11px;
+        white-space: pre-wrap;
+        max-height: 170px;
+        overflow: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Playwright MCP Bridge</h1>
+
+    <div id="stateBadge" class="badge disconnected">Checking...</div>
+    <div id="summary" class="summary">Loading status...</div>
+
+    <div class="grid">
+      <div class="label">Client</div>
+      <div><code id="clientId">-</code></div>
+
+      <div class="label">Server</div>
+      <div><code id="serverUrl">-</code></div>
+
+      <div class="label">Tabs</div>
+      <div id="tabCount">-</div>
+
+      <div class="label">Heartbeat</div>
+      <div id="heartbeatAge">-</div>
+    </div>
+
+    <div class="buttons">
+      <button id="reconnectButton" type="button">Reconnect</button>
+      <button id="refreshButton" type="button">Refresh</button>
+      <button id="optionsButton" type="button">Settings</button>
+    </div>
+
+    <pre id="status"></pre>
+
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>
