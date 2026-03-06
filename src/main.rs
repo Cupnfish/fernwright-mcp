@@ -392,13 +392,13 @@ async fn run_server(
 ) -> Result<()> {
     let bridge_addr = resolve_value(
         bridge_addr,
-        "PLAYWRIGHT_MCP_BRIDGE_ADDR",
+        "FERNWRIGHT_MCP_BRIDGE_ADDR",
         DEFAULT_BRIDGE_ADDR,
     );
-    let http_addr = resolve_value(http_addr, "PLAYWRIGHT_MCP_HTTP_ADDR", DEFAULT_HTTP_ADDR);
+    let http_addr = resolve_value(http_addr, "FERNWRIGHT_MCP_HTTP_ADDR", DEFAULT_HTTP_ADDR);
     let request_timeout_ms = request_timeout_ms
         .or_else(|| {
-            env::var("PLAYWRIGHT_MCP_REQUEST_TIMEOUT_MS")
+            env::var("FERNWRIGHT_MCP_REQUEST_TIMEOUT_MS")
                 .ok()
                 .and_then(|raw| raw.parse::<u64>().ok())
         })
@@ -478,12 +478,12 @@ async fn run_stdio_bridge_server(
 ) -> Result<()> {
     let bridge_addr = resolve_value(
         bridge_addr,
-        "PLAYWRIGHT_MCP_BRIDGE_ADDR",
+        "FERNWRIGHT_MCP_BRIDGE_ADDR",
         DEFAULT_BRIDGE_ADDR,
     );
     let request_timeout_ms = request_timeout_ms
         .or_else(|| {
-            env::var("PLAYWRIGHT_MCP_REQUEST_TIMEOUT_MS")
+            env::var("FERNWRIGHT_MCP_REQUEST_TIMEOUT_MS")
                 .ok()
                 .and_then(|raw| raw.parse::<u64>().ok())
         })

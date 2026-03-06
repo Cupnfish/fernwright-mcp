@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Playwright MCP Tab Bridge",
+  "name": "Fernwright MCP Tab Bridge",
   "description": "Shares your open Chrome tabs with a local MCP server.",
   "version": "0.1.0",
   "permissions": ["tabs", "scripting", "storage"],
@@ -10,7 +10,7 @@
     "type": "module"
   },
   "action": {
-    "default_title": "Playwright MCP Tab Bridge",
+    "default_title": "Fernwright MCP Tab Bridge",
     "default_popup": "popup.html"
   },
   "options_page": "options.html"
