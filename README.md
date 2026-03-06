@@ -10,6 +10,22 @@ It combines a local Rust MCP server with a browser extension that operates on yo
 The name `Fernwright` reflects the fern-inspired logo while still feeling at home in the browser automation ecosystem.
 For compatibility, the binary name and some internal identifiers currently remain `fernwright-mcp` and `fernwright-tab-bridge`.
 
+## Installation
+
+From crates.io:
+
+```bash
+cargo install fernwright-mcp
+```
+
+From source:
+
+```bash
+git clone https://github.com/cupnfish/fernwright-mcp.git
+cd fernwright-mcp
+cargo install --path .
+```
+
 ## Components
 
 Fernwright MCP has two parts:
@@ -233,7 +249,7 @@ Each `Copy ...` action writes directly to the system clipboard.
 4. Select the repo's `extension/` folder.
 5. Click the extension icon to open the popup and confirm connection status.
 6. Click `Open settings` from the popup and verify the WebSocket URL is `ws://127.0.0.1:17373` or your custom address.
-7. Start the Rust server with `cargo run`.
+7. Start the Rust server with `fernwright-mcp serve` (or just `fernwright-mcp`).
 8. Click `Reconnect` in the popup or options page if needed.
 
 The popup and settings pages auto-refresh their status and tab counters while open.

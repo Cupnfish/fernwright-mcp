@@ -3,6 +3,8 @@ name = "fernwright-mcp"
 version = "0.1.0"
 edition = "2024"
 authors = ["cupnfish <cupnfish@icloud.com>"]
+description = "An open-source browser automation MCP server that controls your real browser tabs through a local extension"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 anyhow = "1.0"
