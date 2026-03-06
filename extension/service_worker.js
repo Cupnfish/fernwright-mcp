@@ -347,6 +347,14 @@ async function dispatchRequest(method, params) {
       return await evaluateScript(params);
     case "extractText":
       return await extractText(params);
+    case "waitFor":
+      return await waitForCondition(params);
+    case "captureScreenshot":
+      return await captureScreenshot(params);
+    case "extractPageContext":
+      return await extractPageContext(params);
+    case "getPageHtml":
+      return await getPageHtml(params);
     default:
       throw new Error(`Unsupported method: ${method}`);
   }
@@ -615,6 +623,277 @@ async function extractText(params) {
         selector,
         text: text.slice(0, maxLength),
         truncated: text.length > maxLength,
+      };
+    },
+  });
+
+  return execution.result;
+}
+
+async function waitForCondition(params) {
+  const tabId = normalizeTabId(params.tabId);
+  const timeoutMs = normalizeTimeout(params.timeoutMs);
+  const intervalMs = Math.max(50, Math.min(Number(params.intervalMs || 100), 2_000));
+  const condition = String(params.condition || "element").trim();
+  const selector = params.selector == null ? null : String(params.selector);
+  const text = params.text == null ? null : String(params.text);
+  const script = params.script == null ? null : String(params.script);
+
+  const [execution] = await chrome.scripting.executeScript({
+    target: { tabId },
+    args: [{ condition, selector, text, script, timeoutMs, intervalMs }],
+    func: async ({ condition, selector, text, script, timeoutMs, intervalMs }) => {
+      const supportedConditions = new Set(["element", "text", "url", "function"]);
+      if (!supportedConditions.has(condition)) {
+        throw new Error(
+          `Unsupported condition '${condition}'. Expected one of: element, text, url, function`
+        );
+      }
+
+      const startedAt = Date.now();
+      let dynamicCheck = null;
+      if (condition === "function") {
+        if (!script || !script.trim()) {
+          throw new Error("script is required when condition is 'function'");
+        }
+        dynamicCheck = new Function("selector", "text", script);
+      }
+
+      const evaluate = () => {
+        switch (condition) {
+          case "element":
+            if (!selector || !selector.trim()) {
+              throw new Error("selector is required for condition 'element'");
+            }
+            return Boolean(document.querySelector(selector));
+          case "text":
+            if (!text) {
+              throw new Error("text is required for condition 'text'");
+            }
+            return (document.body?.innerText || "").includes(text);
+          case "url":
+            if (!text) {
+              throw new Error("text is required for condition 'url'");
+            }
+            return window.location.href.includes(text);
+          case "function":
+            return Boolean(dynamicCheck(selector, text));
+          default:
+            return false;
+        }
+      };
+
+      while (Date.now() - startedAt < timeoutMs) {
+        if (evaluate()) {
+          return {
+            ok: true,
+            condition,
+            selector,
+            text,
+            elapsedMs: Date.now() - startedAt,
+            matchedAtUrl: window.location.href,
+          };
+        }
+        await new Promise((resolve) => setTimeout(resolve, intervalMs));
+      }
+
+      throw new Error(
+        `Timed out after ${timeoutMs}ms waiting for condition '${condition}'`
+      );
+    },
+  });
+
+  return execution.result;
+}
+
+async function captureScreenshot(params) {
+  const tabId = normalizeTabId(params.tabId);
+  const includeDataUrl = params.includeDataUrl !== false;
+  const format = String(params.format || "png").toLowerCase();
+  const quality = Math.max(1, Math.min(Number(params.quality || 80), 100));
+
+  if (format !== "png" && format !== "jpeg") {
+    throw new Error("format must be 'png' or 'jpeg'");
+  }
+
+  const tab = await chrome.tabs.get(tabId);
+  if (!tab) {
+    throw new Error(`Tab ${tabId} not found`);
+  }
+
+  await chrome.tabs.update(tabId, { active: true });
+  await chrome.windows.update(tab.windowId, { focused: true });
+  await new Promise((resolve) => setTimeout(resolve, 120));
+
+  const options = format === "jpeg" ? { format, quality } : { format };
+  const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, options);
+  const base64Payload = typeof dataUrl === "string" ? dataUrl.split(",")[1] || "" : "";
+  const approxBytes = Math.floor((base64Payload.length * 3) / 4);
+
+  return {
+    tabId,
+    windowId: tab.windowId,
+    format,
+    quality: format === "jpeg" ? quality : undefined,
+    capturedAt: nowIso(),
+    approximateBytes: approxBytes,
+    dataUrl: includeDataUrl ? dataUrl : undefined,
+  };
+}
+
+async function extractPageContext(params) {
+  const tabId = normalizeTabId(params.tabId);
+  const contextType = String(params.contextType || "all").toLowerCase();
+  const maxElements = Math.max(1, Math.min(Number(params.maxElements || 50), 500));
+
+  const [execution] = await chrome.scripting.executeScript({
+    target: { tabId },
+    args: [{ contextType, maxElements }],
+    func: ({ contextType, maxElements }) => {
+      const clipText = (value, maxLen = 300) =>
+        String(value || "")
+          .trim()
+          .replace(/\s+/g, " ")
+          .slice(0, maxLen);
+
+      const allLinks = Array.from(document.querySelectorAll("a[href]"));
+      const links = allLinks.slice(0, maxElements).map((node) => ({
+        text: clipText(node.innerText || node.textContent, 200),
+        href: node.href,
+        title: clipText(node.title, 120),
+      }));
+
+      const allButtons = Array.from(
+        document.querySelectorAll("button, input[type='button'], input[type='submit'], [role='button']")
+      );
+      const buttons = allButtons.slice(0, maxElements).map((node) => ({
+        text: clipText(node.innerText || node.value || node.textContent, 200),
+        id: node.id || null,
+        className: clipText(node.className || "", 200),
+        disabled: Boolean(node.disabled),
+      }));
+
+      const allInputs = Array.from(document.querySelectorAll("input, textarea, select"));
+      const inputs = allInputs.slice(0, maxElements).map((node) => ({
+        tag: node.tagName.toLowerCase(),
+        type: node.type || null,
+        name: node.name || null,
+        id: node.id || null,
+        placeholder: clipText(node.placeholder || "", 120),
+        required: Boolean(node.required),
+        disabled: Boolean(node.disabled),
+      }));
+
+      const allForms = Array.from(document.forms || []);
+      const forms = allForms.slice(0, maxElements).map((form) => ({
+        id: form.id || null,
+        name: form.name || null,
+        method: (form.method || "get").toLowerCase(),
+        action: form.action || null,
+        elementCount: form.elements.length,
+      }));
+
+      const metaTags = Array.from(document.querySelectorAll("meta"))
+        .slice(0, maxElements)
+        .map((meta) => ({
+          name: meta.getAttribute("name"),
+          property: meta.getAttribute("property"),
+          content: clipText(meta.getAttribute("content") || "", 300),
+        }));
+
+      const payload = {
+        title: document.title,
+        url: window.location.href,
+        summary: {
+          links: allLinks.length,
+          buttons: allButtons.length,
+          inputs: allInputs.length,
+          forms: allForms.length,
+          metaTags: metaTags.length,
+        },
+        links,
+        buttons,
+        inputs,
+        forms,
+        metadata: metaTags,
+      };
+
+      switch (contextType) {
+        case "links":
+          return { title: payload.title, url: payload.url, summary: payload.summary, links };
+        case "buttons":
+          return { title: payload.title, url: payload.url, summary: payload.summary, buttons };
+        case "inputs":
+          return { title: payload.title, url: payload.url, summary: payload.summary, inputs };
+        case "forms":
+          return { title: payload.title, url: payload.url, summary: payload.summary, forms };
+        case "metadata":
+          return {
+            title: payload.title,
+            url: payload.url,
+            summary: payload.summary,
+            metadata: payload.metadata,
+          };
+        case "all":
+          return payload;
+        default:
+          throw new Error(
+            `Unsupported contextType '${contextType}'. Expected one of: all, links, buttons, inputs, forms, metadata`
+          );
+      }
+    },
+  });
+
+  return execution.result;
+}
+
+async function getPageHtml(params) {
+  const tabId = normalizeTabId(params.tabId);
+  const selector = params.selector == null ? "html" : String(params.selector).trim();
+  const maxLength = Math.max(1, Math.min(Number(params.maxLength || 300_000), 2_000_000));
+  const stripScripts = params.stripScripts === true;
+  const stripStyles = params.stripStyles === true;
+
+  if (!selector) {
+    throw new Error("selector cannot be empty");
+  }
+
+  const [execution] = await chrome.scripting.executeScript({
+    target: { tabId },
+    args: [{ selector, maxLength, stripScripts, stripStyles }],
+    func: ({ selector, maxLength, stripScripts, stripStyles }) => {
+      const node = document.querySelector(selector);
+      if (!node) {
+        throw new Error(`No element found for selector: ${selector}`);
+      }
+
+      let html = "";
+      if (stripScripts || stripStyles) {
+        const clone = node.cloneNode(true);
+        if (stripScripts) {
+          clone.querySelectorAll("script").forEach((el) => el.remove());
+        }
+        if (stripStyles) {
+          clone
+            .querySelectorAll("style, link[rel='stylesheet']")
+            .forEach((el) => el.remove());
+        }
+        html = clone.outerHTML || "";
+      } else {
+        html = node.outerHTML || "";
+      }
+
+      const totalLength = html.length;
+      const truncated = totalLength > maxLength;
+
+      return {
+        selector,
+        html: html.slice(0, maxLength),
+        truncated,
+        totalLength,
+        maxLength,
+        title: document.title,
+        url: window.location.href,
       };
     },
   });
