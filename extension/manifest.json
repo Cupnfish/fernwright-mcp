@@ -3,6 +3,12 @@
   "name": "Fernwright MCP Tab Bridge",
   "description": "Shares your open Chrome tabs with a local MCP server.",
   "version": "0.1.0",
+  "icons": {
+    "16": "icon16.png",
+    "32": "icon32.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
   "permissions": ["tabs", "scripting", "storage"],
   "host_permissions": ["<all_urls>"],
   "background": {
@@ -11,7 +17,13 @@
   },
   "action": {
     "default_title": "Fernwright MCP Tab Bridge",
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "32": "icon32.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
   },
   "options_page": "options.html"
 }
