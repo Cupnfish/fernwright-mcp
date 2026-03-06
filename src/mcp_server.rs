@@ -750,7 +750,7 @@ impl ServerHandler for BridgeMcpServer {
     fn get_info(&self) -> ServerInfo {
         ServerInfo::new(ServerCapabilities::builder().enable_tools().build())
             .with_server_info(Implementation::new(
-                "playwright-tab-bridge-rust",
+                "fernwright-mcp",
                 env!("CARGO_PKG_VERSION"),
             ))
             .with_protocol_version(ProtocolVersion::V_2024_11_05)

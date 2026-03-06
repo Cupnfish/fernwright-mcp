@@ -38,7 +38,7 @@ const TRAY_ICON_TARGET_SIZE: u32 = 64;
 
 #[derive(Debug, Parser)]
 #[command(
-    name = "playright-mcp",
+    name = "fernwright-mcp",
     version,
     about = "Fernwright MCP bridge server"
 )]
@@ -443,7 +443,7 @@ async fn run_server(
     eprintln!("Fernwright MCP server started");
     eprintln!("  WebSocket bridge: ws://{}", bridge_addr);
     eprintln!("  HTTP MCP endpoint: {}", endpoint_url(&http_addr));
-    eprintln!("  Export example: playright-mcp export claude-desktop");
+    eprintln!("  Export example: fernwright-mcp export claude-desktop");
 
     tokio::select! {
         _ = tokio::signal::ctrl_c() => {
@@ -518,7 +518,7 @@ fn spawn_tray(
     let (proxy_tx, proxy_rx) = std_mpsc::channel::<EventLoopProxy<TrayUserEvent>>();
 
     let join = std::thread::Builder::new()
-        .name("playright-mcp-tray".to_owned())
+        .name("fernwright-mcp-tray".to_owned())
         .spawn(move || {
             if let Err(err) = run_tray_loop(bridge_addr, http_addr, shutdown_tx, proxy_tx) {
                 eprintln!("Tray loop terminated: {err:#}");
@@ -655,14 +655,14 @@ fn icon_candidates() -> Vec<PathBuf> {
     paths.push(PathBuf::from("tray-icon\\examples\\icon.png"));
 
     if let Some(data_dir) = dirs::data_dir() {
-        paths.push(data_dir.join("playright-mcp").join("icon.svg"));
-        paths.push(data_dir.join("playright-mcp").join("icon.ico"));
-        paths.push(data_dir.join("playright-mcp").join("icon.png"));
+        paths.push(data_dir.join("fernwright-mcp").join("icon.svg"));
+        paths.push(data_dir.join("fernwright-mcp").join("icon.ico"));
+        paths.push(data_dir.join("fernwright-mcp").join("icon.png"));
     }
     if let Some(config_dir) = dirs::config_dir() {
-        paths.push(config_dir.join("playright-mcp").join("icon.svg"));
-        paths.push(config_dir.join("playright-mcp").join("icon.ico"));
-        paths.push(config_dir.join("playright-mcp").join("icon.png"));
+        paths.push(config_dir.join("fernwright-mcp").join("icon.svg"));
+        paths.push(config_dir.join("fernwright-mcp").join("icon.ico"));
+        paths.push(config_dir.join("fernwright-mcp").join("icon.png"));
     }
     paths
 }

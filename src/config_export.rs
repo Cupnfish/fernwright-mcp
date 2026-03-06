@@ -40,7 +40,7 @@ pub fn endpoint_url(http_addr: &str) -> String {
 fn json_config(http_addr: &str) -> Value {
     json!({
         "mcpServers": {
-            "playwright-tab-bridge": {
+            "fernwright-mcp": {
                 "type": "http",
                 "url": endpoint_url(http_addr),
             }
@@ -55,7 +55,7 @@ pub fn json_config_pretty(http_addr: &str) -> Result<String> {
 fn toml_config(http_addr: &str) -> String {
     let endpoint = endpoint_url(http_addr);
     format!(
-        r#"[mcp_servers.playwright-tab-bridge]
+        r#"[mcp_servers.fernwright-mcp]
 url = "{endpoint}""#
     )
 }
@@ -65,13 +65,13 @@ pub fn cli_command(client: ClientType, http_addr: &str) -> Option<String> {
     let endpoint = endpoint_url(http_addr);
     match client {
         ClientType::ClaudeCode => Some(format!(
-            "claude mcp add playwright-tab-bridge --transport http {endpoint}"
+            "claude mcp add fernwright-mcp --transport http {endpoint}"
         )),
         ClientType::Droid => Some(format!(
-            "droid mcp add playwright-tab-bridge {endpoint} --type http"
+            "droid mcp add fernwright-mcp {endpoint} --type http"
         )),
         ClientType::Codex => {
-            Some("codex mcp add playwright-tab-bridge -- playright-mcp serve-stdio".to_owned())
+            Some("codex mcp add fernwright-mcp -- fernwright-mcp serve-stdio".to_owned())
         }
         ClientType::ClaudeDesktop => None,
     }

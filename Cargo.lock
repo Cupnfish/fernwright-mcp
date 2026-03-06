@@ -896,6 +896,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "fernwright-mcp"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "arboard",
+ "axum",
+ "clap",
+ "dirs",
+ "futures-util",
+ "regex",
+ "resvg",
+ "rmcp",
+ "scraper",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-tungstenite",
+ "tokio-util",
+ "tracing",
+ "tracing-subscriber",
+ "tray-icon",
+ "url",
+ "usvg",
+ "winit",
+]
+
+[[package]]
 name = "field-offset"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2523,33 +2550,6 @@ name = "plain"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4596b6d070b27117e987119b4dac604f3c58cfb0b191112e24771b2faeac1a6"
-
-[[package]]
-name = "playright-mcp"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "arboard",
- "axum",
- "clap",
- "dirs",
- "futures-util",
- "regex",
- "resvg",
- "rmcp",
- "scraper",
- "serde",
- "serde_json",
- "tokio",
- "tokio-tungstenite",
- "tokio-util",
- "tracing",
- "tracing-subscriber",
- "tray-icon",
- "url",
- "usvg",
- "winit",
-]
 
 [[package]]
 name = "png"
